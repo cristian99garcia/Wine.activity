@@ -129,6 +129,7 @@ class WineActivity(activity.Activity):
         
         result = []
         s = os.read(stdout, 4096)
+
         while s:
             result.append(s)
             s = os.read(stdout, 4096)
