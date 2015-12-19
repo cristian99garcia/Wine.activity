@@ -25,6 +25,20 @@ import tempfile
 import logging
 import atexit
 
+ARCH = "wine_32"
+import platform
+
+if platform.machine().startswith('arm'):
+    ARCH = "wine_arm"
+
+else:
+    if platform.architecture()[0] == '64bit':
+        ARCH = "wine_64"
+
+    else:
+        ARCH = "wine_32"
+
+
 class WineActivity(activity.Activity):
     def __init__(self, handle):
         activity.Activity.__init__(self, handle)
@@ -61,12 +75,12 @@ class WineActivity(activity.Activity):
 
             self.desktop_parent = self
         
-        os.environ['LD_LIBRARY_PATH'] = "%s:%s" % (os.path.join(self.bundle_path, 'lib'), os.environ.get('LD_LIBRARY_PATH', ''))
-        os.environ['PATH'] = "%s:%s" % (os.path.join(self.bundle_path, 'bin'), os.environ.get('PATH', ''))
+        os.environ['LD_LIBRARY_PATH'] = "%s:%s" % (os.path.join(self.bundle_path, 'wine/', ARCH, 'lib'), os.environ.get('LD_LIBRARY_PATH', ''))
+        os.environ['PATH'] = "%s:%s" % (os.path.join(self.bundle_path, 'wine/', ARCH, 'bin'), os.environ.get('PATH', ''))
         os.environ['WINEPREFIX'] = wine_prefix
-        os.environ['WINELOADER'] = os.path.join(self.bundle_path, 'bin/wine')
-        os.environ['WINESERVER'] = os.path.join(self.bundle_path, 'bin/wineserver')
-        os.environ['WINEDLLPATH'] = os.path.join(self.bundle_path, 'lib/wine')
+        os.environ['WINELOADER'] = os.path.join(self.bundle_path, 'wine/%s/bin/wine' % ARCH)
+        os.environ['WINESERVER'] = os.path.join(self.bundle_path, 'wine/%s/bin//wineserver' % ARCH)
+        os.environ['WINEDLLPATH'] = os.path.join(self.bundle_path, 'wine/%s/lib/wine' % ARCH)
         
         self.desktop_name = str(os.getpid())
         os.environ['WINE_DESKTOP_NAME'] = self.desktop_name
@@ -149,7 +163,7 @@ class WineActivity(activity.Activity):
             finally:
                 f.close()
             
-            expected_timestamp = os.stat(os.path.join(self.bundle_path, 'share/wine/wine.inf')).st_mtime
+            expected_timestamp = os.stat(os.path.join(self.bundle_path, "wine", ARCH, 'share/wine/wine.inf')).st_mtime
             if timestamp == expected_timestamp:
                 #no update needed
                 return
